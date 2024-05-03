@@ -1,13 +1,16 @@
 #!/bin/bash
 echo "Initializing instance..."
 
-export INSTANCE_NAME=${instance_name}
+export INSTANCE_NAME=$(ec2-metadata -i | cut -d " " -f 2)
 
 # Update dependencies
 sudo yum update -y
 sudo yum install -y yum-utils
 sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
 sudo yum -y install nomad
+
+# Needed for load balancer
+# sudo yum -y install consul
 
 # Install Docker - our clients will be used to run Docker
 sudo yum install -y docker
@@ -22,7 +25,7 @@ cat << EOF >> /etc/nomad.d/nomad.hcl
 # Basic Starter Configuration Used for Nomad Course Demonstrations
 # This is NOT a Secure Complete Nomad Server Configuration
 
-name = "${instance_name}"
+name = "$INSTANCE_NAME"
 
 # Directory to store agent state
 data_dir = "/etc/nomad.d/data"
@@ -31,13 +34,6 @@ data_dir = "/etc/nomad.d/data"
 # 0.0.0.0 is the default and results in using the default private network interface
 # Any configurations under the addresses parameter will take precedence over this value
 bind_addr = "0.0.0.0"
-
-advertise {
-  # Defaults to the first private IP address.
-  http = "${private_ip}" # must be reachable by Nomad CLI clients
-  rpc  = "${private_ip}" # must be reachable by Nomad client nodes
-  serf = "${private_ip}" # must be reachable by Nomad server nodes
-}
 
 ports {
   http = 4646
@@ -74,8 +70,16 @@ client {
   server_join {
     retry_join = ["provider=aws tag_key=${tag_key} tag_value=${tag_value}"]
   }
+
+  meta {
+    purpose = "${purpose}"
+    env = "non-prod"
+  }
 }
 EOF
+
+# echo "Starting Consul..."
+# consul agent -dev
 
 echo "Starting Nomad..."
 systemctl start nomad

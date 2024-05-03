@@ -31,5 +31,4 @@ variable "private_subnet_cidrs" {
 
 variable "account_id" {
   type    = string
-  default = "058264549112"
 }

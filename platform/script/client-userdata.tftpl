@@ -1,6 +1,8 @@
 #!/bin/bash
 echo "Initializing instance..."
 
+# Override default to https
+echo export NOMAD_ADDR=https://127.0.0.1:4646 >> /etc/profile
 export INSTANCE_NAME=$(ec2-metadata -i | cut -d " " -f 2)
 
 # Update dependencies
@@ -15,6 +17,23 @@ sudo yum -y install nomad
 # Install Docker - our clients will be used to run Docker
 sudo yum install -y docker
 sudo service docker start
+
+# Create certificates
+mkdir /etc/certs
+cat << EOF >> /etc/certs/ca.crt
+${ca_crt_content}
+EOF
+cat << EOF >> /etc/certs/nomad.crt
+${nomad_cert_content}
+EOF
+cat << EOF >> /etc/certs/nomad.key
+${nomad_key_content}
+EOF
+
+# Trust the CA
+aws s3 cp ${update_certificate_store_s3_path} /home/ec2-user/update-certificate-store.sh
+chmod +x /home/ec2-user/update-certificate-store.sh
+./home/ec2-user/update-certificate-store.sh --cert-file-path /etc/certs/ca.crt
 
 # Remove default nomad config
 rm /etc/nomad.d/nomad.hcl
@@ -43,8 +62,8 @@ ports {
 
 # TLS configurations
 tls {
-  http = false
-  rpc  = false
+  http = true
+  rpc  = true
 
   ca_file   = "/etc/certs/ca.crt"
   cert_file = "/etc/certs/nomad.crt"

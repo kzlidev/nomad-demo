@@ -85,6 +85,16 @@ resource "aws_iam_policy" "instance_policy" {
         Effect   = "Allow"
         Resource = "*"
       },
+      {
+        Action = [
+          "s3:*",
+        ]
+        Effect   = "Allow"
+        Resource = [
+          aws_s3_bucket.my_bucket.arn,
+          "${aws_s3_bucket.my_bucket.arn}/*"
+        ]
+      }
     ]
   })
 }

@@ -1,11 +1,21 @@
 # Installation 
-Install Nomad and Terraform onto your local computer
+Install Nomad, Vault and Terraform onto your local computer
 ```bash
 # Install Nomad (for MacOS)
 brew tap hashicorp/tap
 brew install hashicorp/tap/nomad
+
+# Install Vault
+brew install hashicorp/tap/vault
+
 # Install Terraform
 brew install hashicorp/tap/terraform
+```
+
+# Create Vault Certificates
+Follow the instructions in the Vault directory 
+```bash
+cd vault
 ```
 
 # Setup Nomad Environment

@@ -18,9 +18,13 @@ resource "aws_instance" "nomad_servers" {
   }
 
   user_data = templatefile("${path.module}/script/server-userdata.tftpl", {
-    instance_name = "${var.prefix}-nomad-server-${count.index + 1}"
-    private_ip    = "10.0.${count.index + 1}.4"
-    tag_key       = "Purpose"
-    tag_value     = "nomad-cluster"
+    instance_name                    = "${var.prefix}-nomad-server-${count.index + 1}"
+    private_ip                       = "10.0.${count.index + 1}.4"
+    tag_key                          = "Purpose"
+    tag_value                        = "nomad-cluster"
+    ca_crt_content                   = file("${path.module}/certs/ca.crt")
+    nomad_cert_content               = file("${path.module}/certs/nomad-server.crt")
+    nomad_key_content                = file("${path.module}/certs/nomad-server.key")
+    update_certificate_store_s3_path = "s3://${aws_s3_bucket_object.file_upload.bucket}/${aws_s3_bucket_object.file_upload.key}"
   })
 }

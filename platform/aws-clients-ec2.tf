@@ -14,14 +14,19 @@ resource "aws_launch_template" "webapp" {
   }
 
   tags = {
+    Name    = "${var.prefix}-nomad-client"
     Purpose = "nomad-cluster"
   }
 
   user_data = base64encode(
     templatefile("${path.module}/script/client-userdata.tftpl", {
-      tag_key   = "Purpose"
-      tag_value = "nomad-cluster"
-      purpose   = "application"
+      tag_key                          = "Purpose"
+      tag_value                        = "nomad-cluster"
+      purpose                          = "application"
+      ca_crt_content                   = file("${path.module}/certs/ca.crt")
+      nomad_cert_content               = file("${path.module}/certs/nomad-client.crt")
+      nomad_key_content                = file("${path.module}/certs/nomad-client.key")
+      update_certificate_store_s3_path = "s3://${aws_s3_bucket_object.file_upload.bucket}/${aws_s3_bucket_object.file_upload.key}"
     })
   )
 }

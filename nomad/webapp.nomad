@@ -42,13 +42,19 @@ job "webapp" {
     task "webapp" {
       driver = "docker"
 
+      service {
+        name     = "webapp"
+        port     = "http"
+        provider = "nomad"
+      }
+
       config {
         image = "hashicorp/http-echo"
         args  = [
           "-listen", ":5678",
           "-text", "hello world ${attr.unique.platform.aws.instance-id}",
         ]
-        ports          = ["http"] # Maps back to network.port stanza
+        ports = ["http"] # Maps back to network.port stanza
       }
 
       resources {

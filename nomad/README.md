@@ -4,6 +4,9 @@ export NOMAD_ADDR=<NOMAD_ADDR>:4646
 
 # If bootstrapped
 export NOMAD_TOKEN=<TOKEN>
+
+# Currently the certificate that is created points to only 127.0.0.1
+export NOMAD_SKIP_VERIFY=true
 ```
 
 # Job Plan

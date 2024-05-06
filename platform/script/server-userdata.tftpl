@@ -2,6 +2,8 @@
 echo "Initializing instance..."
 
 export INSTANCE_NAME=${instance_name}
+# Override default to https
+echo export NOMAD_ADDR=https://127.0.0.1:4646 >> /etc/profile
 echo export ECHO_TEXT=\""Hello from ${instance_name}\"" >> /etc/profile
 
 # Update dependencies
@@ -9,6 +11,23 @@ sudo yum update -y
 sudo yum install -y yum-utils
 sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
 sudo yum -y install nomad
+
+# Create certificates
+mkdir /etc/certs
+cat << EOF >> /etc/certs/ca.crt
+${ca_crt_content}
+EOF
+cat << EOF >> /etc/certs/nomad.crt
+${nomad_cert_content}
+EOF
+cat << EOF >> /etc/certs/nomad.key
+${nomad_key_content}
+EOF
+
+# Trust the CA
+aws s3 cp ${update_certificate_store_s3_path} /home/ec2-user/update-certificate-store.sh
+chmod +x /home/ec2-user/update-certificate-store.sh
+./home/ec2-user/update-certificate-store.sh --cert-file-path /etc/certs/ca.crt
 
 # Remove default nomad config
 rm /etc/nomad.d/nomad.hcl
@@ -44,8 +63,8 @@ ports {
 
 # TLS configurations
 tls {
-  http = false
-  rpc  = false
+  http = true
+  rpc  = true
 
   ca_file   = "/etc/certs/ca.crt"
   cert_file = "/etc/certs/nomad.crt"
